@@ -6,6 +6,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
+import { api } from "../api/axios";
+import { AxiosError } from "axios";
 
 /**
  * @description Schema de validação do formulário de criação do perfil.
@@ -55,7 +57,22 @@ export default function Register() {
   });
 
   async function HandleRegister(data: RegisterFormData) {
-    console.log(data);
+    const { name, username } = data;
+
+    try {
+      await api.post("/users", {
+        name,
+        username,
+      });
+    } catch (error) {
+      if (error instanceof AxiosError && error?.response?.data?.message) {
+        alert(error.response.data.message);
+
+        return;
+      }
+
+      console.log(error);
+    }
   }
 
   useEffect(() => {
