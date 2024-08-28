@@ -1,6 +1,13 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+// UUDI - Identificador único universal (Universal Unique Identifier)
+// @default(uuid()) - Valor padrão para o campo id é um UUID
+// @unique - Campo único na tabela do banco de dados (não pode haver dois valores iguais)
+// @map("users") - Altera o nome da tabela no banco de dados para "users"
+// @default(now()) - Valor padrão para o campo created_at é a data e hora atual
+// now() - Função que retorna a data e hora atual
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,14 +21,42 @@ model User {
   id         String   @id @default(uuid())
   username   String   @unique
   name       String
+  email      String?  @unique
+  avatar_url String?
   created_at DateTime @default(now())
+
+  accounts Account[]
+  sessions Session[]
 
   @@map("users")
 }
 
-// UUDI - Identificador único universal (Universal Unique Identifier)
-// @default(uuid()) - Valor padrão para o campo id é um UUID
-// @unique - Campo único na tabela do banco de dados (não pode haver dois valores iguais)
-// @map("users") - Altera o nome da tabela no banco de dados para "users"
-// @default(now()) - Valor padrão para o campo created_at é a data e hora atual
-// now() - Função que retorna a data e hora atual
+model Account {
+  id                  String  @id @default(cuid())
+  user_id             String
+  type                String
+  provider            String
+  provider_account_id String
+  refresh_token       String?
+  access_token        String?
+  expires_at          Int?
+  token_type          String?
+  scope               String?
+  id_token            String?
+  session_state       String?
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([provider, provider_account_id])
+  @@map("accounts")
+}
+
+model Session {
+  id            String   @id @default(cuid())
+  session_token String   @unique
+  user_id       String
+  expires       DateTime
+  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}

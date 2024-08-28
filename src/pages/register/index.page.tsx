@@ -6,8 +6,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
-import { api } from "../api/axios";
 import { AxiosError } from "axios";
+import { api } from "@/lib/axios";
 
 /**
  * @description Schema de validação do formulário de criação do perfil.
