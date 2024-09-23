@@ -14,6 +14,7 @@ import {
   FormError,
   IntervalsContainer,
 } from "./styles";
+import { useRouter } from "next/router";
 import { useFieldArray, useForm, Controller } from "react-hook-form";
 import { Container, Header } from "../styles";
 import { z } from "zod";
@@ -65,6 +66,8 @@ type TimeIntervalsFormInput = z.input<typeof timeIntervalsFormSchema>;
 type TimeIntervalsFormOutput = z.output<typeof timeIntervalsFormSchema>;
 
 export default function TimeIntervals() {
+  const router = useRouter();
+
   const {
     register,
     handleSubmit,
@@ -136,6 +139,8 @@ export default function TimeIntervals() {
     await api.post("/users/time-intervals", {
       intervals,
     });
+
+    await router.push("/register/update-profile");
   }
 
   return (
