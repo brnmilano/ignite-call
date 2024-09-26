@@ -11,6 +11,9 @@ import {
 import { getWeekDays } from "@/utils/get-week-day";
 import { useState, useMemo } from "react";
 import Head from "next/head";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/axios";
+import { useRouter } from "next/router";
 
 /**
  * CalendarWeek - Semana do calendário.
@@ -41,7 +44,15 @@ interface CalendarProps {
   onDateSelected: (date: Date) => void;
 }
 
+interface BlockedDates {
+  blockedWeekDays: number[];
+}
+
 export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
+  const router = useRouter();
+
+  const username = String(router.query.username);
+
   const [currentDate, setCurrentDate] = useState(() => {
     return dayjs().set("date", 1);
   });
@@ -63,6 +74,24 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
   const currentMonth = currentDate.format("MMMM");
 
   const currentYear = currentDate.format("YYYY");
+
+  const { data: blockedDates } = useQuery<BlockedDates>({
+    queryKey: [
+      "blockedDates",
+      currentDate.get("year"),
+      currentDate.get("month"),
+    ],
+    queryFn: async () => {
+      const response = await api.get(`/users/${username}/blocked-dates`, {
+        params: {
+          year: currentDate.get("year"),
+          month: currentDate.get("month"),
+        },
+      });
+      return response.data;
+    },
+    enabled: !!selectedDate,
+  });
 
   const calendarWeeks = useMemo(() => {
     /**
@@ -149,7 +178,12 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
       }),
 
       ...daysInMonthArray.map((date) => {
-        return { date, disabled: date.endOf("day").isBefore(new Date()) };
+        return {
+          date,
+          disabled:
+            date.endOf("day").isBefore(new Date()) ||
+            blockedDates?.blockedWeekDays.includes(date.get("day")),
+        };
       }),
 
       ...nextMonthFillArray.map((date) => {
@@ -202,7 +236,7 @@ export function Calendar({ selectedDate, onDateSelected }: CalendarProps) {
     );
 
     return calendarWeeks;
-  }, [currentDate]);
+  }, [currentDate, blockedDates]);
 
   return (
     <>
